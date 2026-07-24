@@ -1,10 +1,10 @@
-import {fonts} from './fonts';
+import { fonts } from './fonts';
 
 export const DESIGN_WIDTH = 393;
 export const DESIGN_HEIGHT = 852;
 
 export const colors = {
-  background: '#10291f',
+  background: 'rgb(3, 27, 4)',
   card: '#183627',
   cardBorder: '#56754c',
   heading: '#fff4cc',
@@ -70,4 +70,4 @@ export const fontSize = {
   title: 24,
 };
 
-export {fonts};
+export { fonts };

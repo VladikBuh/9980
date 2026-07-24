@@ -1,4 +1,4 @@
-package com.jungmantaro
+package com.jungleexplorer.guide
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

@@ -10,6 +10,8 @@ type ArticleCardProps = {
   isFavorite: boolean;
   onPress: () => void;
   onToggleFavorite: () => void;
+  /** Side-by-side layout for tight vertical space (e.g. map landscape). */
+  compact?: boolean;
 };
 
 export function ArticleCard({
@@ -17,6 +19,7 @@ export function ArticleCard({
   isFavorite,
   onPress,
   onToggleFavorite,
+  compact = false,
 }: ArticleCardProps) {
   const handleShare = () => {
     Share.share({
@@ -26,8 +29,19 @@ export function ArticleCard({
   };
 
   return (
-    <Pressable style={styles.ArticleCardBase} onPress={onPress}>
-      <View style={styles.ArticleCardImageContainer}>
+    <Pressable
+      style={[
+        styles.ArticleCardBase,
+        compact && styles.ArticleCardBaseCompact,
+      ]}
+      onPress={onPress}
+    >
+      <View
+        style={[
+          styles.ArticleCardImageContainer,
+          compact && styles.ArticleCardImageContainerCompact,
+        ]}
+      >
         <Image
           source={article.image}
           style={styles.ArticleCardImage}
@@ -35,15 +49,31 @@ export function ArticleCard({
         />
       </View>
 
-      <View style={styles.ArticleCardBody}>
-        <Text style={styles.ArticleCardTitle} numberOfLines={1}>
+      <View
+        style={[
+          styles.ArticleCardBody,
+          compact && styles.ArticleCardBodyCompact,
+        ]}
+      >
+        <Text
+          style={styles.ArticleCardTitle}
+          numberOfLines={compact ? 2 : 1}
+        >
           {article.title}
         </Text>
-        <Text style={styles.ArticleCardDescription} numberOfLines={1}>
+        <Text
+          style={styles.ArticleCardDescription}
+          numberOfLines={compact ? 2 : 1}
+        >
           {article.shortDescription}
         </Text>
 
-        <View style={styles.ArticleCardActions}>
+        <View
+          style={[
+            styles.ArticleCardActions,
+            compact && styles.ArticleCardActionsCompact,
+          ]}
+        >
           <Pressable onPress={onToggleFavorite} hitSlop={8}>
             <Image
               source={isFavorite ? icons.liked : icons.like}
@@ -67,10 +97,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
   },
+  ArticleCardBaseCompact: {
+    flexDirection: 'row',
+  },
   ArticleCardImageContainer: {
     backgroundColor: colors.card,
     height: 168,
     width: '100%',
+  },
+  ArticleCardImageContainerCompact: {
+    height: 112,
+    width: 112,
   },
   ArticleCardImage: {
     height: '100%',
@@ -80,6 +117,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 12,
     paddingBottom: 14,
+  },
+  ArticleCardBodyCompact: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingBottom: 10,
+    paddingTop: 10,
   },
   ArticleCardTitle: {
     color: colors.heading,
@@ -97,6 +140,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 16,
     marginTop: 14,
+  },
+  ArticleCardActionsCompact: {
+    marginTop: 10,
   },
   ArticleCardActionIcon: {
     height: 18,

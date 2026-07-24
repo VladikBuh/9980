@@ -1,5 +1,12 @@
 import React, { useRef } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { FadeInScreen } from '../components/FadeInScreen';
 import { SwipeCard } from '../components/quiz/SwipeCard';
@@ -23,45 +30,50 @@ export function QuizActiveScreen({
 
   return (
     <FadeInScreen style={styles.QuizActiveScreenBase}>
-      <View
-        style={styles.QuizActiveScreenSplitBackground}
-        pointerEvents="none"
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.QuizActiveScreenSplitFalse} />
-        <View style={styles.QuizActiveScreenSplitTrue} />
-      </View>
+        <View
+          style={styles.QuizActiveScreenSplitBackground}
+          pointerEvents="none"
+        >
+          <View style={styles.QuizActiveScreenSplitFalse} />
+          <View style={styles.QuizActiveScreenSplitTrue} />
+        </View>
 
-      <View style={styles.QuizActiveScreenTopSpacer} />
+        <View style={styles.QuizActiveScreenTopSpacer} />
 
-      <View style={styles.QuizActiveScreenMascotWrap}>
-        <Image
-          source={quizMascots.active}
-          style={styles.QuizActiveScreenMascot}
-          resizeMode="contain"
-        />
-      </View>
+        <View style={styles.QuizActiveScreenMascotWrap}>
+          <Image
+            source={quizMascots.active}
+            style={styles.QuizActiveScreenMascot}
+            resizeMode="contain"
+          />
+        </View>
 
-      <Text style={styles.QuizActiveScreenInstruction}>
-        Swipe left if it is false,{'\n'}swipe right if it is true
-      </Text>
+        <Text style={styles.QuizActiveScreenInstruction}>
+          Swipe left if it is false,{'\n'}swipe right if it is true
+        </Text>
 
-      <View style={styles.QuizActiveScreenCardMargin}>
-        <SwipeCard
-          key={question.id}
-          ref={cardRef}
-          question={question}
-          onAnswer={onAnswer}
-        />
-      </View>
+        <View style={styles.QuizActiveScreenCardMargin}>
+          <SwipeCard
+            key={question.id}
+            ref={cardRef}
+            question={question}
+            onAnswer={onAnswer}
+          />
+        </View>
 
-      <View style={styles.QuizActiveScreenChoices}>
-        <Pressable onPress={() => cardRef.current?.answer('false')}>
-          <Text style={styles.QuizActiveScreenChoiceLabel}>False</Text>
-        </Pressable>
-        <Pressable onPress={() => cardRef.current?.answer('true')}>
-          <Text style={styles.QuizActiveScreenChoiceLabel}>True</Text>
-        </Pressable>
-      </View>
+        <View style={styles.QuizActiveScreenChoices}>
+          <Pressable onPress={() => cardRef.current?.answer('false')}>
+            <Text style={styles.QuizActiveScreenChoiceLabel}>False</Text>
+          </Pressable>
+          <Pressable onPress={() => cardRef.current?.answer('true')}>
+            <Text style={styles.QuizActiveScreenChoiceLabel}>True</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
     </FadeInScreen>
   );
 }
@@ -119,6 +131,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
     paddingHorizontal: spacing.l,
     paddingTop: spacing.l,
+    marginTop: 150,
   },
 
   QuizActiveScreenChoices: {

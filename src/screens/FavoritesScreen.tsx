@@ -302,6 +302,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 14,
     width: '100%',
+    marginBottom: 40,
   },
 
   FavoritesScreenExploreButtonLabel: {

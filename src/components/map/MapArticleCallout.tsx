@@ -11,6 +11,7 @@ type MapArticleCalloutProps = {
   onPress: () => void;
   onToggleFavorite: () => void;
   onClose: () => void;
+  compact?: boolean;
 };
 
 export function MapArticleCallout({
@@ -19,14 +20,21 @@ export function MapArticleCallout({
   onPress,
   onToggleFavorite,
   onClose,
+  compact = false,
 }: MapArticleCalloutProps) {
   return (
-    <View style={styles.MapArticleCalloutBase}>
+    <View
+      style={[
+        styles.MapArticleCalloutBase,
+        compact && styles.MapArticleCalloutBaseCompact,
+      ]}
+    >
       <ArticleCard
         article={article}
         isFavorite={isFavorite}
         onPress={onPress}
         onToggleFavorite={onToggleFavorite}
+        compact={compact}
       />
       <Pressable
         style={styles.MapArticleCalloutClose}
@@ -42,6 +50,10 @@ export function MapArticleCallout({
 const styles = StyleSheet.create({
   MapArticleCalloutBase: {
     position: 'relative',
+    width: '100%',
+  },
+  MapArticleCalloutBaseCompact: {
+    maxWidth: 360,
   },
   MapArticleCalloutClose: {
     alignItems: 'center',

@@ -117,6 +117,7 @@ const styles = StyleSheet.create({
   OnboardingScreenFooter: {
     paddingBottom: spacing.xxxl,
     paddingHorizontal: spacing.xl,
+    marginTop: 8,
   },
 
   OnboardingScreenActions: {

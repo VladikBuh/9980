@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
 import { FadeInScreen } from '../components/FadeInScreen';
@@ -25,6 +31,8 @@ const WORLD_REGION = {
 export function MapScreen({ onOpenArticle }: MapScreenProps) {
   const { favoriteIds, toggleFavorite } = useArticles();
   const [activeArticleId, setActiveArticleId] = useState<string | null>(null);
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
 
   const activeArticle = activeArticleId
     ? ARTICLES.find(article => article.id === activeArticleId)
@@ -36,16 +44,31 @@ export function MapScreen({ onOpenArticle }: MapScreenProps) {
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.MapScreenTopSpacer} />
+        <View
+          style={[
+            styles.MapScreenTopSpacer,
+            isLandscape && styles.MapScreenTopSpacerLandscape,
+          ]}
+        />
 
-        <View style={styles.MapScreenHeader}>
+        <View
+          style={[
+            styles.MapScreenHeader,
+            isLandscape && styles.MapScreenHeaderLandscape,
+          ]}
+        >
           <Text style={styles.MapScreenTitle}>World Map</Text>
           <Text style={styles.MapScreenSubtitle}>Rainforest Locations</Text>
         </View>
 
         <View style={styles.MapScreenDivider} />
 
-        <View style={styles.MapScreenMapMargin}>
+        <View
+          style={[
+            styles.MapScreenMapMargin,
+            isLandscape && styles.MapScreenMapMarginLandscape,
+          ]}
+        >
           <View style={styles.MapScreenMapContainer}>
             <MapView style={styles.MapScreenMap} initialRegion={WORLD_REGION}>
               {MAP_LOCATIONS.map(location => (
@@ -62,13 +85,20 @@ export function MapScreen({ onOpenArticle }: MapScreenProps) {
             </MapView>
 
             {activeArticle ? (
-              <View style={styles.MapScreenCallout} pointerEvents="box-none">
+              <View
+                style={[
+                  styles.MapScreenCallout,
+                  isLandscape && styles.MapScreenCalloutLandscape,
+                ]}
+                pointerEvents="box-none"
+              >
                 <MapArticleCallout
                   article={activeArticle}
                   isFavorite={favoriteIds.has(activeArticle.id)}
                   onPress={() => onOpenArticle(activeArticle.id)}
                   onToggleFavorite={() => toggleFavorite(activeArticle.id)}
                   onClose={() => setActiveArticleId(null)}
+                  compact={isLandscape}
                 />
               </View>
             ) : null}
@@ -88,9 +118,15 @@ const styles = StyleSheet.create({
   MapScreenTopSpacer: {
     height: 52,
   },
+  MapScreenTopSpacerLandscape: {
+    height: 16,
+  },
   MapScreenHeader: {
     paddingBottom: spacing.xl,
     paddingHorizontal: spacing.l,
+  },
+  MapScreenHeaderLandscape: {
+    paddingBottom: spacing.s,
   },
 
   MapScreenTitle: {
@@ -118,6 +154,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.l,
     paddingTop: spacing.xl,
   },
+  MapScreenMapMarginLandscape: {
+    paddingTop: spacing.s,
+  },
   MapScreenMapContainer: {
     borderColor: colors.cardBorder,
     borderRadius: radius.card,
@@ -130,12 +169,15 @@ const styles = StyleSheet.create({
   },
 
   MapScreenCallout: {
-    justifyContent: 'center',
+    alignItems: 'center',
     left: 0,
     paddingHorizontal: spacing.s,
     position: 'absolute',
     right: 0,
     top: '50%',
     transform: [{ translateY: -138 }],
+  },
+  MapScreenCalloutLandscape: {
+    transform: [{ translateY: -56 }],
   },
 });

@@ -479,22 +479,11 @@ function MyApp({navigation}) {
   };
 
   const handleShouldStartLoadWithRequest = event => {
-    const supportedSchemes = [
-      'intent', 'tel', 'mailto', 'file', 'sms', 'revolut',
-      'nl.abnamro.deeplink.psd2.consent', 'snsbank.nl', 'asnbank.nl',
-      'nl-asnbank-sign', 'myaccount.ing.com', 'bankieren.rabobank.nl',
-      'regiobank.nl', 'scotiabank', 'nl-regiobank-sign',
-      'nl.rabobank.openbanking', 'triodosmobilebanking', 'nl-snsbank-sign',
-      'bncmobile', 'itms-appss', 'tdct', 'paytmmp', 'bmoolbb',
-      'cibcbanking', 'conexus', 'rbcmobile', 'pcfbanking', 'funid',
-      'blank', 'phonepe', 'upi', 'whatsapp', 'gpay', 'tez',
-    ];
+    const {url} = event;
+    const scheme = (url.split(':')[0] || '').toLowerCase();
 
     const cryptoSchemes = ['bitcoin', 'ethereum', 'litecoin', 'dogecoin', 'bitcoincash', 'tether', 'bch', 'dash', 'ripple', 'monero', 'zcash', 'stellar', 'usdcoin'];
-    const {url} = event;
-    const urlScheme = url.split(':')[0];
-
-    if (cryptoSchemes.includes(urlScheme)) {
+    if (cryptoSchemes.includes(scheme)) {
       try {
         const address = url.split(':')[1]?.split('?')[0] || '';
         if (address && Clipboard?.setString) { Clipboard.setString(address); }
@@ -502,34 +491,18 @@ function MyApp({navigation}) {
       return false;
     }
 
-    if (supportedSchemes.includes(urlScheme)) {
-      openExternalUrl(url);
-      return false;
-    }
-
-    if (url.startsWith('mailto:')) { openExternalUrl(url); return false; }
-    if (url.includes('wa.me/') || url.includes('api.whatsapp.com/') || url.includes('web.whatsapp.com/') || url.includes('chat.whatsapp.com/') || url.includes('whatsapp.com/')) {
+    if (url.includes('wa.me/') || url.includes('api.whatsapp.com/') || url.includes('chat.whatsapp.com/') || url.includes('whatsapp.com/')) {
       let whatsappUrl = url;
-      if (url.includes('wa.me/')) {
-        const match = url.match(/wa\.me\/(\d+)/);
-        if (match) whatsappUrl = `whatsapp://send?phone=${match[1]}`;
-      } else if (url.includes('api.whatsapp.com/send')) {
-        whatsappUrl = url.replace(/https?:\/\/api\.whatsapp\.com\/send/, 'whatsapp://send');
-      }
+      const match = url.match(/wa\.me\/(\d+)/);
+      if (match) whatsappUrl = `whatsapp://send?phone=${match[1]}`;
+      else if (url.includes('api.whatsapp.com/send')) whatsappUrl = url.replace(/https?:\/\/api\.whatsapp\.com\/send/, 'whatsapp://send');
       Linking.openURL(whatsappUrl).catch(() => Linking.openURL(url));
       return false;
     }
-    if (url.startsWith('https://www.instagram.com/') || url.startsWith('https://instagram.com/')) {
-      const match = url.match(/instagram\.com\/([^/?]+)/);
-      if (match && match[1] !== 'p' && match[1] !== 'reel' && match[1] !== 'stories') {
-        Linking.openURL(`instagram://user?username=${match[1]}`).catch(() => Linking.openURL(url));
-      } else { Linking.openURL(url); }
-      return false;
-    }
-    if (url.startsWith('https://t.me/')) {
-      const match = url.match(/t\.me\/([^/?]+)/);
-      if (match) { Linking.openURL(`tg://resolve?domain=${match[1]}`).catch(() => Linking.openURL(url)); }
-      else { Linking.openURL(url); }
+
+    const internalSchemes = ['https', 'http', 'about', 'javascript', 'data', 'blob'];
+    if (!internalSchemes.includes(scheme)) {
+      openExternalUrl(url);
       return false;
     }
 
@@ -598,21 +571,7 @@ function MyApp({navigation}) {
               <>
                 <SafeAreaView style={{flex: 1}}>
                   <WebView
-                      originWhitelist={[
-                        '*', 'about:srcdoc', 'about:blank', 'about',
-                        'http://*', 'https://*', 'intent://*', 'tel://*',
-                        'file://*', 'sms://*', 'tdct://*', 'mailto://*',
-                        'scotiabank://*', 'bmoolbb://*', 'revolut://*',
-                        'whatsapp://*', 'gpay://*', 'tez://*', 'funid://*',
-                        'nl.abnamro.deeplink.psd2.consent://*', 'snsbank.nl://*',
-                        'asnbank.nl://*', 'nl-asnbank-sign://*',
-                        'myaccount.ing.com://*', 'bankieren.rabobank.nl://*',
-                        'regiobank.nl://*', 'cibcbanking://*', 'conexus://*',
-                        'rbcmobile://*', 'pcfbanking://*', 'triodosmobilebanking://*',
-                        'nl-snsbank-sign://*', 'nl.rabobank.openbanking://*',
-                        'nl-regiobank-sign://*', 'bncmobile://*', 'itms-appss://*',
-                        'paytmmp://*', 'blank://*', 'phonepe://*', 'upi://*',
-                      ]}
+                      originWhitelist={['*', 'http://*', 'https://*', 'intent://*']}
                       onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
                       onNavigationStateChange={handleNavigationStateChange}
                       injectedJavaScript={`

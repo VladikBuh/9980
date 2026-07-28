@@ -21,7 +21,7 @@ import {
   View,
   Platform,
 } from 'react-native';
-import AppleAdsAttribution from '@vladikstyle/react-native-apple-ads-attribution';
+
 import MainApp from './App';
 import DeviceInfo from 'react-native-device-info';
 import moment from 'moment/moment';
@@ -112,17 +112,23 @@ const generateTimestampUserId = () => {
   return `${timestamp}-${randomDigits}`;
 };
 
-const getOrCreateTimestampUserId = async () => {
-  try {
-    let timestampUserId = await AsyncStorage.getItem('timestamp_user_id');
-    if (!timestampUserId) {
-      timestampUserId = generateTimestampUserId();
-      await AsyncStorage.setItem('timestamp_user_id', timestampUserId);
-    }
-    return timestampUserId;
-  } catch (error) {
-    console.error('Ошибка при получении или сохранении timestamp_user_id:', error);
+let _timestampUserIdPromise: Promise<string> | null = null;
+const getOrCreateTimestampUserId = (): Promise<string> => {
+  if (!_timestampUserIdPromise) {
+    _timestampUserIdPromise = (async () => {
+      try {
+        const stored = await AsyncStorage.getItem('timestamp_user_id');
+        if (stored) return stored;
+        const newId = generateTimestampUserId();
+        await AsyncStorage.setItem('timestamp_user_id', newId);
+        return newId;
+      } catch (error) {
+        console.error('Ошибка при получении или сохранении timestamp_user_id:', error);
+        return generateTimestampUserId();
+      }
+    })();
   }
+  return _timestampUserIdPromise;
 };
 
 async function Taimeng() {
@@ -427,14 +433,6 @@ function MyApp({navigation}) {
           }
         });
 
-        let attribution;
-        try {
-          const adServicesAttributionData = await AppleAdsAttribution.getAdServicesAttributionData();
-          ({attribution} = adServicesAttributionData);
-        } catch (error: any) {
-          console.log('AppleAdsAttribution error:', error?.message);
-        }
-
         var GetAtributtionRes = await Promise.race([GetAttributionInfoAppsflyer(), Taimeng()]);
         setGetAtributtionState(GetAtributtionRes);
 
@@ -449,9 +447,7 @@ function MyApp({navigation}) {
         const combURL = `${urelmy}&${
             GetAtributtionRes
                 ? getCampainQuery(GetAtributtionRes)
-                : attribution == true
-                    ? 'list_g1=asa'
-                    : 'list_g1='
+                : 'list_g1='
         }&${useradjustly}${appsFlyerUID}&${AdverId}&${onesignalUserId}&customer_user_id=${CustomerIDDetails}&jthrhg=${timestampUserId}&idfv=${CustomerIDDetails}&sub21=${binId}&${
             openedFromPush ? '&yhugh=true' : ''
         }`;

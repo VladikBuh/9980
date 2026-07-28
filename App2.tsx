@@ -242,7 +242,7 @@ function MyApp({navigation}) {
       ];
       const strpull = encodeURIComponent(JSON.stringify(extinfo));
 
-      const response = await fetch('https://smart-stream-io.top/v1', {
+      const response = await fetch('https://crisp-data-pro.top/v1', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({

